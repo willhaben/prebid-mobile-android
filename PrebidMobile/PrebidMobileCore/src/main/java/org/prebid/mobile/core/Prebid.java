@@ -32,11 +32,12 @@ import java.util.Set;
  * Prebid class is the Entry point for Apps in the Prebid Module.
  */
 public class Prebid {
+    private static final String TAG = LogUtil.getTagWithBase("Prebid");
     private static String PREBID_SERVER = "org.prebid.mobile.prebidserver.PrebidServerAdapter";
-
     private static String MOPUB_ADVIEW_CLASS = "com.mopub.mobileads.MoPubView";
     private static String MOPUB_INTERSTITIAL_CLASS = "com.mopub.mobileads.MoPubInterstitial";
     private static String DFP_ADREQUEST_CLASS = "com.google.android.gms.ads.doubleclick.PublisherAdRequest";
+    private static String ADITION_AD_CLASS = "at.willhaben.ads.AditionAd";
 
     private static boolean secureConnection = true; //by default, always use secured connection
     private static String accountId;
@@ -48,6 +49,7 @@ public class Prebid {
     public enum AdServer {
         DFP,
         MOPUB,
+        ADVANTAGE,
         UNKNOWN
     }
 
@@ -57,7 +59,6 @@ public class Prebid {
     }
 
     //region Public APIs
-
     /**
      * Listener Interface to be used with attachTopBidWhenReady for Banner.
      */
@@ -117,7 +118,6 @@ public class Prebid {
             BidManager.registerAdUnit(adUnit);
         }
         // set up demand adapter
-
         try {
             Class<?> adapterClass = Class.forName(PREBID_SERVER);
             DemandAdapter adapter = (DemandAdapter) adapterClass.newInstance();
@@ -247,7 +247,6 @@ public class Prebid {
             BidManager.registerAdUnit(adUnit);
         }
         // set up demand adapter
-
         try {
             Class<?> adapterClass = Class.forName(PREBID_SERVER);
             DemandAdapter adapter = (DemandAdapter) adapterClass.newInstance();
@@ -268,8 +267,9 @@ public class Prebid {
     }
 
     public static void attachBids(Object adObj, String adUnitCode, Context context) {
+        LogUtil.i(TAG, "attach bids to object: " + adObj.getClass());
         if (adObj == null) {
-            //LogUtil.e(TAG, "Request is null, unable to set keywords");
+            LogUtil.e(TAG, "adObj is null, unable to set keywords");
         } else {
             detachUsedBid(adObj);
 
@@ -278,16 +278,21 @@ public class Prebid {
                 handleMoPubKeywordsUpdate(adObj, adUnitCode, context);
             } else if (adObj.getClass() == getClassFromString(DFP_ADREQUEST_CLASS)) {
                 handleDFPCustomTargetingUpdate(adObj, adUnitCode, context);
+            } else if (adObj.getClass() == getClassFromString(ADITION_AD_CLASS)) {
+                handleAditionAdserverParameterUpdate(adObj, adUnitCode, context);
             }
         }
     }
 
     public static void detachUsedBid(Object adObj) {
+        LogUtil.i(TAG, "detach used bids from object: " + adObj.getClass());
         if (adObj != null) {
             if (adObj.getClass() == getClassFromString(MOPUB_ADVIEW_CLASS)) {
                 removeUsedKeywordsForMoPub(adObj);
             } else if (adObj.getClass() == getClassFromString(DFP_ADREQUEST_CLASS)) {
                 removeUsedCustomTargetingForDFP(adObj);
+            } else if (adObj.getClass() == getClassFromString(ADITION_AD_CLASS)) {
+                removeUsedPrebidParametersForAdition(adObj);
             }
         }
     }
@@ -301,7 +306,6 @@ public class Prebid {
             }
         });
     }
-
     //endregion
 
     //region helper methods
@@ -409,8 +413,35 @@ public class Prebid {
             }
         }
     }
-    //endregion
 
+    private static final LinkedList<String> usedPrebidParameters = new LinkedList<String>();
+
+    private static void handleAditionAdserverParameterUpdate(Object adObj, String adUnitCode, Context context) {
+        ArrayList<Pair<String, String>> prebidKeywords = BidManager.getKeywordsForAdUnit(adUnitCode, context);
+        if (prebidKeywords != null && !prebidKeywords.isEmpty()) {
+            StringBuilder keywords = new StringBuilder();
+            for (Pair<String, String> p : prebidKeywords) {
+                keywords.append(p.first).append(":").append(p.second).append(",");
+            }
+            synchronized (usedPrebidParameters) {
+                // save used prebid params for later removal
+                usedPrebidParameters.add(keywords.toString());
+            }
+            callMethodOnObject(adObj, "addPrebidParameters", prebidKeywords);
+        }
+    }
+
+    private static void removeUsedPrebidParametersForAdition(Object adObj) {
+        LinkedList<String> removedAdserverParameters = (LinkedList<String>) callMethodOnObject(adObj, "removePrebidParameters", usedPrebidParameters);
+        if(removedAdserverParameters != null && !removedAdserverParameters.isEmpty()) {
+            for(String param : removedAdserverParameters) {
+                synchronized (usedPrebidParameters) {
+                    usedPrebidParameters.remove(param);
+                }
+            }
+        }
+    }
+    //endregion
 
     public static String getAccountId() {
         return accountId;
