@@ -260,30 +260,24 @@ public class Prebid {
         }
     }
 
-    private static final LinkedList<String> usedPrebidParameters = new LinkedList<String>();
+    private static final ArrayList<Pair<String, String>> usedPrebidParameters = new ArrayList<Pair<String, String>>();
 
     private static void handleAditionAdserverParameterUpdate(Object adObj, String adUnitCode, Context context) {
         ArrayList<Pair<String, String>> prebidKeywords = BidManager.getKeywordsForAdUnit(adUnitCode, context);
         if (prebidKeywords != null && !prebidKeywords.isEmpty()) {
-            StringBuilder keywords = new StringBuilder();
-            for (Pair<String, String> p : prebidKeywords) {
-                keywords.append(p.first).append(":").append(p.second).append(",");
-            }
             synchronized (usedPrebidParameters) {
                 // save used prebid params for later removal
-                usedPrebidParameters.add(keywords.toString());
+                usedPrebidParameters.addAll(prebidKeywords);
             }
             callMethodOnObject(adObj, "addPrebidParameters", prebidKeywords);
         }
     }
 
     private static void removeUsedPrebidParametersForAdition(Object adObj) {
-        LinkedList<String> removedAdserverParameters = (LinkedList<String>) callMethodOnObject(adObj, "removePrebidParameters", usedPrebidParameters);
-        if(removedAdserverParameters != null && !removedAdserverParameters.isEmpty()) {
-            for(String param : removedAdserverParameters) {
-                synchronized (usedPrebidParameters) {
-                    usedPrebidParameters.remove(param);
-                }
+        ArrayList<Pair<String, String>> removedPrebidParameters = (ArrayList<Pair<String, String>>) callMethodOnObject(adObj, "removePrebidParameters", usedPrebidParameters);
+        if (removedPrebidParameters != null && !removedPrebidParameters.isEmpty()) {
+            synchronized (usedPrebidParameters) {
+                usedPrebidParameters.removeAll(removedPrebidParameters);
             }
         }
     }
