@@ -190,7 +190,6 @@ public class Prebid {
     }
 
     public static void attachBids(Object adObj, String adUnitCode, Context context) {
-        LogUtil.i(TAG, "attach bids to object: " + adObj.getClass());
         if (adObj == null) {
             LogUtil.e(TAG, "adObj is null, unable to set keywords");
         } else {
@@ -208,7 +207,6 @@ public class Prebid {
     }
 
     public static void detachUsedBid(Object adObj) {
-        LogUtil.i(TAG, "detach used bids from object: " + adObj.getClass());
         if (adObj != null) {
             if (adObj.getClass() == getClassFromString(MOPUB_ADVIEW_CLASS)) {
                 removeUsedKeywordsForMoPub(adObj);
@@ -341,9 +339,7 @@ public class Prebid {
     // willhaben
     private static void handleAditionAdserverParameterUpdate(Object adObj, String adUnitCode, Context context) {
         ArrayList<Pair<String, String>> prebidKeywords = BidManager.getKeywordsForAdUnit(adUnitCode, context);
-        if (prebidKeywords != null && !prebidKeywords.isEmpty()) {
-            callMethodOnObject(adObj, "addPrebidParameters", prebidKeywords);
-        }
+        callMethodOnObject(adObj, "setPrebidParameters", prebidKeywords);
     }
     //endregion
 
