@@ -136,8 +136,6 @@ public class Prebid {
                 removeUsedKeywordsForMoPub(adObj);
             } else if (adObj.getClass() == getClassFromString(DFP_ADREQUEST_CLASS)) {
                 removeUsedCustomTargetingForDFP(adObj);
-            } else if (adObj.getClass() == getClassFromString(ADITION_AD_CLASS)) {
-                removeUsedPrebidParametersForAdition(adObj);
             }
         }
     }
@@ -184,6 +182,7 @@ public class Prebid {
         return null;
     }
 
+    // MoPub
     private static final LinkedList<String> usedKeywordsList = new LinkedList<String>();
 
     private static void handleMoPubKeywordsUpdate(Object adViewObj, String adUnitCode, Context context) {
@@ -235,6 +234,7 @@ public class Prebid {
         }
     }
 
+    // DFP
     private static final Set<String> usedKeywordKeys = new HashSet<String>();
 
     private static void handleDFPCustomTargetingUpdate(Object adRequestObj, String adUnitCode, Context context) {
@@ -260,25 +260,11 @@ public class Prebid {
         }
     }
 
-    private static final ArrayList<Pair<String, String>> usedPrebidParameters = new ArrayList<Pair<String, String>>();
-
+    // willhaben
     private static void handleAditionAdserverParameterUpdate(Object adObj, String adUnitCode, Context context) {
         ArrayList<Pair<String, String>> prebidKeywords = BidManager.getKeywordsForAdUnit(adUnitCode, context);
         if (prebidKeywords != null && !prebidKeywords.isEmpty()) {
-            synchronized (usedPrebidParameters) {
-                // save used prebid params for later removal
-                usedPrebidParameters.addAll(prebidKeywords);
-            }
             callMethodOnObject(adObj, "addPrebidParameters", prebidKeywords);
-        }
-    }
-
-    private static void removeUsedPrebidParametersForAdition(Object adObj) {
-        ArrayList<Pair<String, String>> removedPrebidParameters = (ArrayList<Pair<String, String>>) callMethodOnObject(adObj, "removePrebidParameters", usedPrebidParameters);
-        if (removedPrebidParameters != null && !removedPrebidParameters.isEmpty()) {
-            synchronized (usedPrebidParameters) {
-                usedPrebidParameters.removeAll(removedPrebidParameters);
-            }
         }
     }
     //endregion
