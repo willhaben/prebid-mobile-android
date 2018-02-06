@@ -83,7 +83,6 @@ public class BidManager {
     //endregion
 
     //region Auction Logic Handling
-
     /**
      * Fetches bids for all the ad slots
      *
@@ -118,11 +117,9 @@ public class BidManager {
             requestBidsForAdUnits(context, adUnits);
         }
     }
-
     //endregion
 
     //region Auction Response Saving
-
     /**
      * Listener that listens to the responses from demand sources
      */
@@ -169,11 +166,9 @@ public class BidManager {
             return secondBid.getCpm().compareTo(firstBid.getCpm());
         }
     }
-
     //endregion
 
     //region Auction Response Retrieval
-
     /**
      * Checks if the Auction has completed for a given adUnit.
      *
@@ -275,11 +270,10 @@ public class BidManager {
             });
         }
     }
-
     //endregion
 
-    //region Methods for testing purpose
-    protected static void reset() {
+    //region Methods for Bid & AdUnit maintenance
+    public static void reset() {
         if (adUnits != null)
             adUnits.clear();
         if (bidMap != null)
@@ -290,12 +284,29 @@ public class BidManager {
         }
     }
 
-    static void setPeriodToCheckExpiration(long period) {
+    public static void refreshBids(Context context) {
+        if (bidMap != null) {
+            bidMap.clear();
+        }
+        ArrayList<AdUnit> toBeRequested = new ArrayList<AdUnit>();
+        if (adUnits != null) {
+            for (AdUnit adUnit : adUnits) {
+                toBeRequested.add(adUnit);
+            }
+        }
+        requestBidsForAdUnits(context, toBeRequested);
+    }
+
+    public static void setPeriodToCheckExpiration(long period) {
         periodToCheckExpiration = period;
     }
 
-    static ConcurrentHashMap<String, ArrayList<BidResponse>> getBidMap() {
+    public static ConcurrentHashMap<String, ArrayList<BidResponse>> getBidMap() {
         return bidMap;
-    } // TODO check where this is being used, delete when confirm not being used
+    }
+
+    public static Set<AdUnit> getRegisteredAdUnits() {
+        return adUnits;
+    }
     //endregion
 }
