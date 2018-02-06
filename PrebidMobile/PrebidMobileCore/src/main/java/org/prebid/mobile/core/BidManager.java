@@ -278,8 +278,8 @@ public class BidManager {
 
     //endregion
 
-    //region Methods for testing purpose
-    protected static void reset() {
+    //region Methods for Bid & AdUnit maintenance
+    public static void reset() {
         if (adUnits != null)
             adUnits.clear();
         if (bidMap != null)
@@ -290,7 +290,7 @@ public class BidManager {
         }
     }
 
-    static void refreshBids(Context context) {
+    public static void refreshBids(Context context) {
         if (bidMap != null) {
             bidMap.clear();
         }
@@ -303,12 +303,16 @@ public class BidManager {
         requestBidsForAdUnits(context, toBeRequested);
     }
 
-    static void setPeriodToCheckExpiration(long period) {
+    public static void setPeriodToCheckExpiration(long period) {
         periodToCheckExpiration = period;
     }
 
-    static ConcurrentHashMap<String, ArrayList<BidResponse>> getBidMap() {
+    public static ConcurrentHashMap<String, ArrayList<BidResponse>> getBidMap() {
         return bidMap;
-    } // TODO check where this is being used, delete when confirm not being used
+    }
+
+    public static Set<AdUnit> getRegisteredAdUnits() {
+        return adUnits;
+    }
     //endregion
 }
