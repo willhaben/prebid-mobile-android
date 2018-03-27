@@ -44,6 +44,11 @@ public class Prebid {
     private static String accountId;
     private static final int kMoPubQueryStringLimit = 4000;
 
+    static {
+        TAG = LogUtil.getTagWithBase("Prebid");
+
+    }
+
     //region Public APIs
 
     /**
@@ -69,7 +74,7 @@ public class Prebid {
      */
 
     public static void init(Context context, ArrayList<AdUnit> adUnits, String accountId) throws PrebidException {
-        LogUtil.i("Initializing with a list of AdUnits");
+        LogUtil.i(TAG, "Initializing with a list of AdUnits");
         // validate context
         if (context == null) {
             throw new PrebidException(PrebidException.PrebidError.NULL_CONTEXT);
@@ -85,7 +90,7 @@ public class Prebid {
         }
         for (AdUnit adUnit : adUnits) {
             if (adUnit.getAdType().equals(AdType.BANNER) && adUnit.getSizes().isEmpty()) {
-                LogUtil.e("Sizes are not added to BannerAdUnit with code: " + adUnit.getCode());
+                LogUtil.e(TAG, "Sizes are not added to BannerAdUnit with code: " + adUnit.getCode());
                 throw new PrebidException(PrebidException.PrebidError.BANNER_AD_UNIT_NO_SIZE);
             }
             if (adUnit.getAdType().equals(AdType.INTERSTITIAL)) {
