@@ -12,11 +12,13 @@ import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
+import static junit.framework.Assert.assertTrue;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 21, manifest = Config.NONE)
@@ -31,8 +33,18 @@ public class BidManagerTest extends BaseSetup {
         initializePrebid();
     }
 
+    private void setTestServer(String serverName) {
+        try {
+            Field prebidServerField = Prebid.class.getDeclaredField("PREBID_SERVER");
+            prebidServerField.setAccessible(true);
+            prebidServerField.set(null, serverName);
+        } catch (NoSuchFieldException e) {
+        } catch (IllegalAccessException e) {
+        }
+    }
+
     private void initializePrebid() {
-        Prebid.setTestServer(MockServer.class.getName());
+        setTestServer(MockServer.class.getName());
         //Configure Banner Ad-Units
         adUnit1 = new BannerAdUnit(TestConstants.bannerAdUnit1, TestConstants.configID1);
         adUnit1.addSize(320, 50);
@@ -45,11 +57,19 @@ public class BidManagerTest extends BaseSetup {
         adUnit3 = new InterstitialAdUnit(TestConstants.interstitialAdUnit, TestConstants.configID3);
 
         TargetingParams.setGender(TargetingParams.GENDER.FEMALE);
-        TargetingParams.setAge(25);
+        TargetingParams.setYearOfBirth(1992);
         TargetingParams.setLocationDecimalDigits(2);
         TargetingParams.setLocationEnabled(true);
-        TargetingParams.setCustomTargeting("Test", "Prebid-Custom-1");
-        TargetingParams.setCustomTargeting("Test2", "Prebid-Custom-2");
+    }
+
+    private void setAdServer(Prebid.AdServer adServer) {
+        try {
+            Field adServerField = Prebid.class.getDeclaredField("adServer");
+            adServerField.setAccessible(true);
+            adServerField.set(null, adServer);
+        } catch (IllegalAccessException e) {
+        } catch (NoSuchFieldException e) {
+        }
     }
 
     // Test case for checking the init call
@@ -74,7 +94,7 @@ public class BidManagerTest extends BaseSetup {
         MockServer.addTestSetup(TestConstants.configID1, bids);
         MockServer.addTestSetup(TestConstants.configID2, bids2);
         // Init prebid with ad units
-        Prebid.init(activity.getApplicationContext(), adUnits, TestConstants.accountId);
+        Prebid.init(activity.getApplicationContext(), adUnits, TestConstants.accountId, Prebid.AdServer.DFP, Prebid.Host.APPNEXUS);
         Robolectric.flushBackgroundThreadScheduler();
         Robolectric.flushForegroundThreadScheduler();
 
@@ -94,7 +114,7 @@ public class BidManagerTest extends BaseSetup {
         // Cache a bid
         ArrayList<AdUnit> adUnits = new ArrayList<AdUnit>();
         adUnits.add(adUnit1);
-        Prebid.init(activity.getApplicationContext(), adUnits, TestConstants.accountId);
+        Prebid.init(activity.getApplicationContext(), adUnits, TestConstants.accountId, Prebid.AdServer.DFP, Prebid.Host.APPNEXUS);
 
         // Here is where we call start new Auction.
         ArrayList<BidResponse> bids = new ArrayList<>();
@@ -134,7 +154,7 @@ public class BidManagerTest extends BaseSetup {
         MockServer.addTestSetup(TestConstants.configID1, bids);
         ArrayList<AdUnit> adUnits = new ArrayList<AdUnit>();
         adUnits.add(adUnit1);
-        Prebid.init(activity.getApplicationContext(), adUnits, TestConstants.accountId);
+        Prebid.init(activity.getApplicationContext(), adUnits, TestConstants.accountId, Prebid.AdServer.DFP, Prebid.Host.APPNEXUS);
         Robolectric.flushBackgroundThreadScheduler();
         Robolectric.flushForegroundThreadScheduler();
         ArrayList<BidResponse> bidForAdUnit = BidManager.getWinningBids(adUnit1.getCode());
@@ -158,7 +178,7 @@ public class BidManagerTest extends BaseSetup {
         MockServer.addTestSetup(TestConstants.configID1, bids);
         ArrayList<AdUnit> adUnits = new ArrayList<AdUnit>();
         adUnits.add(adUnit1);
-        Prebid.init(activity.getApplicationContext(), adUnits, TestConstants.accountId);
+        Prebid.init(activity.getApplicationContext(), adUnits, TestConstants.accountId, Prebid.AdServer.DFP, Prebid.Host.APPNEXUS);
         Robolectric.flushBackgroundThreadScheduler();
         Robolectric.flushForegroundThreadScheduler();
         ArrayList<Pair<String, String>> keywords = BidManager.getKeywordsForAdUnit(adUnit1.getCode(), activity.getApplicationContext());
@@ -179,7 +199,8 @@ public class BidManagerTest extends BaseSetup {
         super.tearDown();
 
         // Clear targeting since these are static settings
-        TargetingParams.clearCustomKeywords();
+        TargetingParams.clearAppKeywords();
+        TargetingParams.clearUserKeywords();
         TargetingParams.setLocation(null);
         TargetingParams.setLocationDecimalDigits(-1);
         TargetingParams.setGender(TargetingParams.GENDER.UNKNOWN);
