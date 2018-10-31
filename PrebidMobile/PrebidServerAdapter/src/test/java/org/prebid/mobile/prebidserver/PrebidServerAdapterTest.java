@@ -168,7 +168,7 @@ public class PrebidServerAdapterTest extends BaseSetup {
             adServerField.set(null, adServer);
             Field useLocalCacheField = Prebid.class.getDeclaredField("useLocalCache");
             useLocalCacheField.setAccessible(true);
-            if (adServer == Prebid.AdServer.MOPUB) {
+            if (adServer == Prebid.AdServer.MOPUB || adServer == Prebid.AdServer.ADITION) {
                 useLocalCacheField.set(null, false);
             } else {
                 useLocalCacheField.set(null, true);
