@@ -38,6 +38,7 @@ public class Prebid {
     private static String MOPUB_INTERSTITIAL_CLASS = "com.mopub.mobileads.MoPubInterstitial";
     private static String DFP_ADREQUEST_CLASS = "com.google.android.gms.ads.doubleclick.PublisherAdRequest";
     private static String ADITION_AD_CLASS = "at.willhaben.ads.AditionAd";
+    private static String NEXUS_AD_CLASS = "at.willhaben.ads.NexusAd";
 
     private static boolean secureConnection = true; //by default, always use secured connection
     private static String accountId;
@@ -219,7 +220,9 @@ public class Prebid {
             } else if (adObj.getClass() == getClassFromString(DFP_ADREQUEST_CLASS)) {
                 handleDFPCustomTargetingUpdate(adObj, adUnitCode, context);
             } else if (adObj.getClass() == getClassFromString(ADITION_AD_CLASS)) {
-                handleAditionAdserverParameterUpdate(adObj, adUnitCode, context);
+                handlePrebidAttachableParameterUpdate(adObj, adUnitCode, context);
+            } else if (adObj.getClass() == getClassFromString(NEXUS_AD_CLASS)) {
+                handlePrebidAttachableParameterUpdate(adObj, adUnitCode, context);
             }
         }
     }
@@ -355,7 +358,7 @@ public class Prebid {
     }
 
     // willhaben
-    private static void handleAditionAdserverParameterUpdate(Object adObj, String adUnitCode, Context context) {
+    private static void handlePrebidAttachableParameterUpdate(Object adObj, String adUnitCode, Context context) {
         ArrayList<Pair<String, String>> prebidKeywords = BidManager.getKeywordsForAdUnit(adUnitCode, context);
         callMethodOnObject(adObj, "setPrebidParameters", prebidKeywords);
     }
