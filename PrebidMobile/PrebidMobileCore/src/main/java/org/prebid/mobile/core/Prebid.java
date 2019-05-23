@@ -50,7 +50,7 @@ public class Prebid {
     public enum AdServer {
         DFP,
         MOPUB,
-        ADITION,
+        APPNEXUS,
         UNKNOWN
     }
 
@@ -168,7 +168,7 @@ public class Prebid {
         }
         Prebid.accountId = accountId;
         Prebid.adServer = adServer;
-        if (AdServer.MOPUB.equals(Prebid.adServer) || AdServer.ADITION.equals(Prebid.adServer)) {
+        if (AdServer.MOPUB.equals(Prebid.adServer) || AdServer.APPNEXUS.equals(Prebid.adServer)) {
             Prebid.useLocalCache = false;
         }
         if (host == null)
